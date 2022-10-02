@@ -42,6 +42,9 @@ def _is_valid_input_file(filename) -> bool:
         print(e)
         p.kill()
         outs, errs = p.communicate()
+    except Exception as e:
+        print(e)
+        exit(1)
     finally:
         # If the file is no file that ffprobe recognizes we will get an error in the errors
         # else wise we will obtain an output in outs if there exists at least one audio stream
