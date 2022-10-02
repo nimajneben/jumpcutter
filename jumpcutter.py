@@ -32,8 +32,8 @@ def _is_valid_input_file(filename) -> bool:
     :return: True if it is a file with an audio stream attached.
     """
 
-    command = 'ffprobe -i "{}" -hide_banner -loglevel error -select_streams a' \
-              ' -show_entries stream=codec_type'.format(filename)
+    command = ["ffprobe", "-i", str(filename), "-hide_banner", "-loglevel", "error", "-select_streams", "a",
+                "-show_entries", "stream=codec_type"]
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     outs, errs = None, None
     try:
@@ -149,9 +149,9 @@ def speed_up_video(
         _delete_path(temp_folder)
     _create_path(temp_folder)
 
-    # Find out framerate and duration of the input video
-    command = 'ffprobe -i "{}" -hide_banner -loglevel error -select_streams v' \
-              ' -show_entries format=duration:stream=avg_frame_rate'.format(input_file)
+    # Find out framerate and duration of the input video 
+    command = ['ffprobe', '-i', str(input_file), '-hide_banner', '-loglevel', 'error', '-select_streams', 'v',
+               '-show_entries', 'format=duration:stream=avg_frame_rate']
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
     std_out, err = p.communicate()
     match_frame_rate = re.search(r'frame_rate=(\d*)/(\d*)', str(std_out))
@@ -166,10 +166,8 @@ def speed_up_video(
         # print(f'Found Duration {original_duration}')
 
     # Extract the audio
-    command = 'ffmpeg -i "{}" -ab 160k -ac 2 -ar {} -vn {} -hide_banner' \
-        .format(input_file,
-                sample_rate,
-                temp_folder + '/audio.wav')
+    command = ['ffmpeg', '-i', str(input_file), '-ab', '160k', '-ac', '2', '-ar', str(sample_rate), '-vn', str(temp_folder) + '/audio.wav',
+               '-hide_banner']
 
     _run_timed_ffmpeg_command(command, total=int(original_duration * frame_rate), unit='frames',
                               desc='Extracting audio:')
@@ -248,12 +246,8 @@ def speed_up_video(
     filter_graph_file.write(expression.replace(',', '\\,'))
     filter_graph_file.close()
 
-    command = 'ffmpeg -i "{}" -i "{}" -filter_script:v "{}" -map 0 -map -0:a -map 1:a -c:a aac "{}"' \
-              ' -loglevel warning -stats -y -hide_banner' \
-        .format(input_file,
-                temp_folder + '/audioNew.wav',
-                temp_folder + '/filterGraph.txt',
-                output_file)
+    command = ['ffmpeg', '-i', input_file, '-i', temp_folder + '/audioNew.wav' ,'-filter_script:v', temp_folder + '/filterGraph.txt', 
+               '-map', '0', '-map', '-0:a', '-map', '1:a', '-c:a', 'aac', output_file]
 
     _run_timed_ffmpeg_command(command, total=chunks[-1][3], unit='frames', desc='Generating final:')
 
